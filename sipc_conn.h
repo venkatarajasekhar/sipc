@@ -43,10 +43,20 @@ typedef struct conn
 int connect(conn_t * conn, int addr, int port);
 int accept(conn_t * conn, int addr, int port);
 
+// Acquire/release connection and copy process memory in shared memory
 int send_safe(conn_t conn,
               void * data,
               uint64_t data_len,
               blocking_behavior_t behavior);
+
+// Acquire connection and allow direct access to shared memory through *ptr_to_shm
+int send_unsafe_acquire(conn_t conn,
+                        void ** ptr_to_shm,
+                        uint64_t * max_len,
+                        blocking_behavior_t behavior);
+
+// Release a connection acquire with send_unsafe
+int send_unsafe_release(conn_t conn)
 
 // Lock connection and copies shared memory into process-owned memory
 int recv_safe(conn_t conn,
@@ -54,11 +64,11 @@ int recv_safe(conn_t conn,
               uint64_t user_length,
               blocking_behavior_t behavior);
 
-// Lock the connection and provide direct access shared memory through *ptr_to_shm
+// Acquire the connection and provide direct access shared memory through *ptr_to_shm
 int recv_unsafe_acquire(conn_t conn,
                         void ** ptr_to_shm,
                         uint64_t * len,
                         blocking_behavior_t behavior);
 
-// Release the connection locked with and unsafe recv
+// Release the connection acquired with recv_unsafe
 int recv_unsafe_release(conn_t conn);
