@@ -24,15 +24,13 @@ typedef enum
 typedef struct conn_header
 {
     conn_state_t state;
-    uint64_t data_length;
-    uint64_t transaction_num;
-    uint64_t response_num;
     uint64_t sibling_fd;
     uint8_t data[0];
 } conn_header_t;
 
 typedef struct conn
 {
+    conn_type_t type;
     void * in_buffer;
     uint64_t in_fd;
     void * out_buffer;
