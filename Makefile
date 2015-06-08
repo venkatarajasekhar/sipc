@@ -1,2 +1,2 @@
 all:
-	gcc main.c -o main
+	gcc sipc_conn.c main.c -o main
