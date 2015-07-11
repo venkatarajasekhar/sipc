@@ -4,7 +4,7 @@
 
 inline static int read_acquire_attempt(conn_t conn)
 {
-    conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
     return !__sync_bool_compare_and_swap(&conn_header->state,
                                          IDLE,
                                          READ_LOCKED);
@@ -18,7 +18,7 @@ inline static int read_acquire(conn_t conn)
 
 inline static int write_acquire_attempt(conn_t conn)
 {
-    conn_header_t * conn_header = (conn_header_t *) conn.out_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) conn.out_buffer;
     return !__sync_bool_compare_and_swap(&conn_header->state,
                                          IDLE,
                                          WRITE_LOCKED);
@@ -31,10 +31,10 @@ inline static int write_acquire(conn_t conn)
 }
 
 int recv_unsafe_acquire(conn_t conn,
-                        void  ** buffer,
+                        volatile void  ** buffer,
                         blocking_behavior_t behavior)
 {
-    conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
     if(behavior == BLOCKING)
     {
         read_acquire(conn);
@@ -53,16 +53,16 @@ int recv_unsafe_acquire(conn_t conn,
 
 int recv_unsafe_release(conn_t conn)
 {
-    conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
     conn_header->state = IDLE;
 }
 
 int send_unsafe_acquire(conn_t conn,
-                        void  ** buffer,
+                        volatile void  ** buffer,
                         uint64_t * max_len,
                         blocking_behavior_t behavior)
 {
-    conn_header_t * conn_header = (conn_header_t * ) conn.in_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t * ) conn.in_buffer;
     if(behavior == BLOCKING)
     {
         read_acquire(conn);
@@ -82,6 +82,6 @@ int send_unsafe_acquire(conn_t conn,
 
 int send_unsafe_release(conn_t conn)
 {
-    conn_header_t * conn_header = (conn_header_t *) conn.out_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) conn.out_buffer;
     conn_header->state = IDLE;
 }
