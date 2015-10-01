@@ -75,3 +75,9 @@ int recv_unsafe_acquire(conn_t conn,
 
 // Release the connection acquired with recv_unsafe
 int recv_unsafe_release(conn_t conn);
+inline static int read_acquire_attempt(conn_t *conn);
+inline static int write_acquire_attempt(conn_t *conn);
+
+
+
+
