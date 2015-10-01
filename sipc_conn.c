@@ -2,46 +2,46 @@
 
 #include "sipc_conn.h"
 
-inline static int read_acquire_attempt(conn_t conn)
+inline static int read_acquire_attempt(conn_t *conn)
 {
-    volatile conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) (conn->in_buffer);
     return !__sync_bool_compare_and_swap(&conn_header->state,
                                          IDLE,
                                          READ_LOCKED);
 }
 
-inline static int read_acquire(conn_t conn)
+inline static int read_acquire(conn_t *conn)
 {
-    while(!read_acquire_attempt(conn));
+    while(!read_acquire_attempt(&conn));
     return 0;
 }
 
-inline static int write_acquire_attempt(conn_t conn)
+inline static int write_acquire_attempt(conn_t *conn)
 {
-    volatile conn_header_t * conn_header = (conn_header_t *) conn.out_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) (conn->out_buffer);
     return !__sync_bool_compare_and_swap(&conn_header->state,
                                          IDLE,
                                          WRITE_LOCKED);
 }
 
-inline static int write_acquire(conn_t conn)
+inline static int write_acquire(conn_t *conn)
 {
-    while(!read_acquire_attempt(conn));
+    while(!read_acquire_attempt(&conn));
     return 0;
 }
 
-int recv_unsafe_acquire(conn_t conn,
+int recv_unsafe_acquire(conn_t *conn,
                         volatile void  ** buffer,
                         blocking_behavior_t behavior)
 {
-    volatile conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) (conn->in_buffer);
     if(behavior == BLOCKING)
     {
         read_acquire(conn);
     }
     else
     {
-        if(!read_acquire_attempt(conn))
+        if(!read_acquire_attempt(&conn))
         {
             return 1;
         }
@@ -51,25 +51,25 @@ int recv_unsafe_acquire(conn_t conn,
     return 0;
 }
 
-int recv_unsafe_release(conn_t conn)
+int recv_unsafe_release(conn_t *conn)
 {
-    volatile conn_header_t * conn_header = (conn_header_t *) conn.in_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) (conn->in_buffer);
     conn_header->state = IDLE;
 }
 
-int send_unsafe_acquire(conn_t conn,
+int send_unsafe_acquire(conn_t *conn,
                         volatile void  ** buffer,
                         uint64_t * max_len,
                         blocking_behavior_t behavior)
 {
-    volatile conn_header_t * conn_header = (conn_header_t * ) conn.in_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t * ) (conn->in_buffer);
     if(behavior == BLOCKING)
     {
-        read_acquire(conn);
+        read_acquire(&conn);
     }
     else
     {
-        if(!read_acquire_attempt(conn))
+        if(!read_acquire_attempt(&conn))
         {
             return 1;
         }
@@ -80,8 +80,8 @@ int send_unsafe_acquire(conn_t conn,
     return 0;
 }
 
-int send_unsafe_release(conn_t conn)
+int send_unsafe_release(conn_t *conn)
 {
-    volatile conn_header_t * conn_header = (conn_header_t *) conn.out_buffer;
+    volatile conn_header_t * conn_header = (conn_header_t *) (conn->out_buffer);
     conn_header->state = IDLE;
 }
